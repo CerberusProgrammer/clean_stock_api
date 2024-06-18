@@ -1,8 +1,10 @@
 from django.db import models
+from django.core.exceptions import ValidationError
+
 
 class Product(models.Model):
     name = models.CharField(max_length=100)
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(max_length=255, blank=True, null=True)
     barcode = models.CharField(max_length=100, db_index=True, unique=True)
     weight = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     dimension = models.CharField(max_length=100, blank=True, null=True)
@@ -19,6 +21,12 @@ class Product(models.Model):
     quantity_max = models.IntegerField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    def clean(self):
+        if self.quantity_min is not None and self.quantity < self.quantity_min:
+            raise ValidationError('Quantity must be greater than or equal to quantity_min.')
+        if self.quantity_max is not None and self.quantity > self.quantity_max:
+            raise ValidationError('Quantity must be less than or equal to quantity_max.')
     
     def __str__(self):
         return self.name
