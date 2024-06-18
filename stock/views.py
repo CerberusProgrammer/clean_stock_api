@@ -51,6 +51,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     filter_backends = [DjangoFilterBackend]
+    filterset_class = OrderFilter
 
 class TransactionViewSet(viewsets.ModelViewSet):
     queryset = Transaction.objects.all()
