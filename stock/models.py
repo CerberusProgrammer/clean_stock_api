@@ -3,10 +3,13 @@ from django.db import models
 class Product(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
-    barcode = models.CharField(max_length=100, db_index=True)
+    barcode = models.CharField(max_length=100, db_index=True, unique=True)
     weight = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     dimension = models.CharField(max_length=100, blank=True, null=True)
+    expiration_date = models.DateField(blank=True, null=True)
+    location = models.CharField(max_length=100, blank=True, null=True)
     manufacturer = models.ForeignKey('Manufacturer', on_delete=models.SET_NULL, blank=True, null=True)
+    supplier = models.ForeignKey('Supplier', on_delete=models.SET_NULL, blank=True, null=True)
     icon = models.CharField(max_length=50, blank=True, null=True)
     image = models.ImageField(upload_to='products/', blank=True, null=True)
     status = models.BooleanField(default=True)
@@ -22,7 +25,7 @@ class Product(models.Model):
 
 class Category(models.Model):
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
-    name = models.CharField(max_length=100, db_index=True)
+    name = models.CharField(max_length=100, db_index=True, unique=True)
     icon = models.CharField(max_length=50, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     status = models.BooleanField(default=True)
@@ -33,7 +36,7 @@ class Category(models.Model):
         return self.name
 
 class Manufacturer(models.Model):    
-    name = models.CharField(max_length=100, db_index=True)
+    name = models.CharField(max_length=100, db_index=True, unique=True)
     icon = models.CharField(max_length=50, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     address = models.CharField(max_length=200, blank=True, null=True)
@@ -50,7 +53,7 @@ class Manufacturer(models.Model):
         return self.name
 
 class Supplier(models.Model):
-    name = models.CharField(max_length=100, db_index=True)
+    name = models.CharField(max_length=100, db_index=True, unique=True)
     icon = models.CharField(max_length=50, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     address = models.CharField(max_length=200, blank=True, null=True)
@@ -65,3 +68,29 @@ class Supplier(models.Model):
     
     def __str__(self):
         return self.name
+
+class Order(models.Model):
+    transactions = models.ManyToManyField('Transaction')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f'{self.created_at}'
+
+class Transaction(models.Model):
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    quantity = models.IntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.product.name
+    
+    def complete_transaction(self):
+        self.product.quantity -= self.quantity
+        self.product.save()
+
+    def reverse_transaction(self):
+        self.product.quantity += self.quantity
+        self.product.save()
