@@ -10,7 +10,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'stock',
-    'djangorestframework',
+    'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
