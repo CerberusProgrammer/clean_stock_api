@@ -6,7 +6,10 @@ SECRET_KEY = 'django-insecure-lhq9o9ghe6$v!y(9y=2^vkaqfxz7t+97f9z_db+xj(qzh0ca+=
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 INSTALLED_APPS = [
     'stock',
