@@ -25,6 +25,10 @@ To run the Clean Stock API with Django, follow these steps:
 
 5. Open your favorite browser and navigate to `http://localhost:8000` to access the Clean Stock API.
 
+## Testing
+global testing: python3 manage.py test
+individual testing (example): python3 manage.py test stock.tests.test_category_model
+
 📚 **API Documentation**
 For detailed information on the available endpoints and how to use them, please refer to the [API documentation](https://localhost/api/docs/).
 
