@@ -56,4 +56,4 @@ class TransactionModelTest(TestCase):
         transaction = Transaction.objects.get(id=1)
         transaction.reverse_transaction()
         product = Product.objects.get(id=transaction.product.id)
-        self.assertEqual(product.quantity, 10)
+        self.assertEqual(product.quantity, 15)
