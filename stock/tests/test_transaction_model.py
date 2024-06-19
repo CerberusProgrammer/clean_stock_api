@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.test import TestCase
 from ..models import Transaction, Product
 
@@ -37,7 +38,7 @@ class TransactionModelTest(TestCase):
         """
         transaction = Transaction.objects.get(id=1)
         price = transaction.price
-        self.assertEqual(price, 10.99)
+        self.assertEqual(price, Decimal('10.99'))
     
     def test_complete_transaction(self):
         """
