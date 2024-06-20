@@ -95,7 +95,8 @@ class ProductModelTest(TestCase):
                 price=19.99,
                 quantity=20,
                 quantity_min=10,
-                quantity_max=40
+                quantity_max=40,
+                user=self.user
             )
 
     def test_quantity_within_bounds(self):
