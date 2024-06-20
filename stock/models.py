@@ -3,9 +3,10 @@ from django.core.exceptions import ValidationError
 
 
 class Product(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     description = models.TextField(max_length=255, blank=True, null=True)
-    barcode = models.CharField(max_length=100, db_index=True, unique=True)
+    barcode = models.CharField(max_length=100, db_index=True)
     weight = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     dimension = models.CharField(max_length=100, blank=True, null=True)
     expiration_date = models.DateField(blank=True, null=True)
@@ -22,6 +23,11 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'barcode'], name='unique_barcode_per_user')
+        ]
+    
     def clean(self):
         if self.quantity_min is not None and self.quantity < self.quantity_min:
             raise ValidationError('Quantity must be greater than or equal to quantity_min.')
@@ -32,19 +38,26 @@ class Product(models.Model):
         return self.name
 
 class Category(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
-    name = models.CharField(max_length=100, db_index=True, unique=True)
+    name = models.CharField(max_length=100, db_index=True)
     icon = models.CharField(max_length=50, blank=True, null=True)
     description = models.TextField(max_length=255, blank=True, null=True)
     status = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'name'], name='unique_category_per_user')
+        ]
+    
     def __str__(self):
         return self.name
 
 class Manufacturer(models.Model):    
-    name = models.CharField(max_length=100, db_index=True, unique=True)
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    name = models.CharField(max_length=100, db_index=True)
     icon = models.CharField(max_length=50, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     address = models.CharField(max_length=200, blank=True, null=True)
@@ -56,12 +69,18 @@ class Manufacturer(models.Model):
     status = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'name'], name='unique_manufacturer_per_user')
+        ]
     
     def __str__(self):
         return self.name
 
 class Supplier(models.Model):
-    name = models.CharField(max_length=100, db_index=True, unique=True)
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    name = models.CharField(max_length=100, db_index=True)
     icon = models.CharField(max_length=50, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     address = models.CharField(max_length=200, blank=True, null=True)
@@ -74,23 +93,40 @@ class Supplier(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'name'], name='unique_supplier_per_user')
+        ]
+    
     def __str__(self):
         return self.name
 
 class Order(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     transactions = models.ManyToManyField('Transaction')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'created_at'], name='unique_order_per_user')
+        ]
     
     def __str__(self):
         return f'{self.created_at}'
 
 class Transaction(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     product = models.ForeignKey('Product', on_delete=models.CASCADE)
     quantity = models.IntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'product', 'created_at'], name='unique_transaction_per_user')
+        ]
     
     def __str__(self):
         return self.product.name
