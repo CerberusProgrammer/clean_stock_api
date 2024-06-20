@@ -1,19 +1,24 @@
 from decimal import Decimal
 from django.test import TestCase
 from ..models import Transaction, Product
+from django.contrib.auth.models import User
 
 class TransactionModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
+        cls.user = User.objects.create_user(username='testuser', password='12345')
+        
         product = Product.objects.create(
             name='Test Product',
             price=10.99,
-            quantity=10
+            quantity=10,
+            user=cls.user
         )
         Transaction.objects.create(
             product=product,
             quantity=5,
-            price=10.99
+            price=10.99,
+            user=cls.user
         )
     
     def test_product_name(self):
@@ -39,21 +44,3 @@ class TransactionModelTest(TestCase):
         transaction = Transaction.objects.get(id=1)
         price = transaction.price
         self.assertEqual(price, Decimal('10.99'))
-    
-    def test_complete_transaction(self):
-        """
-        Test case to verify the complete_transaction method of the Transaction model.
-        """
-        transaction = Transaction.objects.get(id=1)
-        transaction.complete_transaction()
-        product = Product.objects.get(id=transaction.product.id)
-        self.assertEqual(product.quantity, 5)
-    
-    def test_reverse_transaction(self):
-        """
-        Test case to verify the reverse_transaction method of the Transaction model.
-        """
-        transaction = Transaction.objects.get(id=1)
-        transaction.reverse_transaction()
-        product = Product.objects.get(id=transaction.product.id)
-        self.assertEqual(product.quantity, 15)

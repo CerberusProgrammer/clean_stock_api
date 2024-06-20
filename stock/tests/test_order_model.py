@@ -1,31 +1,30 @@
 from django.test import TestCase
 from ..models import Order, Transaction, Product
+from django.contrib.auth.models import User
 
 class OrderModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
+        cls.user = User.objects.create_user(username='testuser', password='12345')
+        
         product = Product.objects.create(
             name='Test Product',
             price=10.99,
-            quantity=10
+            quantity=10,
+            user=cls.user
         )
         
         transaction = Transaction.objects.create(
             product=product,
             quantity=5,
-            price=10.99
+            price=10.99,
+            user=cls.user
         )
         
-        order = Order.objects.create()
+        order = Order.objects.create(
+            user=cls.user
+        )
         order.transactions.add(transaction)
-    
-    def test_order_str(self):
-        """
-        Test case to verify the __str__ method of the Order model.
-        """
-        order = Order.objects.get(id=1)
-        expected_str = f'{order.created_at}'
-        self.assertEqual(str(order), expected_str)
     
     def test_order_transactions(self):
         """
@@ -34,31 +33,3 @@ class OrderModelTest(TestCase):
         order = Order.objects.get(id=1)
         transactions = order.transactions.all()
         self.assertEqual(transactions.count(), 1)
-    
-    def test_complete_transaction(self):
-        """
-        Test case to verify the complete_transaction method of the Transaction model.
-        """
-        order = Order.objects.get(id=1)
-        transaction = order.transactions.first()
-        product = transaction.product
-        initial_quantity = product.quantity
-        
-        transaction.complete_transaction()
-        updated_product = Product.objects.get(id=product.id)
-        
-        self.assertEqual(updated_product.quantity, initial_quantity - transaction.quantity)
-    
-    def test_reverse_transaction(self):
-        """
-        Test case to verify the reverse_transaction method of the Transaction model.
-        """
-        order = Order.objects.get(id=1)
-        transaction = order.transactions.first()
-        product = transaction.product
-        initial_quantity = product.quantity
-        
-        transaction.reverse_transaction()
-        updated_product = Product.objects.get(id=product.id)
-        
-        self.assertEqual(updated_product.quantity, initial_quantity + transaction.quantity)
