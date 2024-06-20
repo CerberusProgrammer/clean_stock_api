@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from django.contrib.auth.models import User
+from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.authentication import TokenAuthentication
 
@@ -111,8 +112,8 @@ class ManufacturerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            return Supplier.objects.filter(user=self.request.user)
-        return Supplier.objects.none()
+            return Manufacturer.objects.filter(user=self.request.user)
+        return Manufacturer.objects.none()
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -131,7 +132,17 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Order.objects.none()
     
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        order = serializer.save(user=self.request.user)
+
+        for transaction in order.transactions.all():
+            transaction.product.quantity -= transaction.quantity
+            transaction.product.save()
+    
+    @action(detail=True, methods=['post'])
+    def cancel(self, request, pk=None):
+        order = self.get_object()
+        order.cancel()
+        return Response({"status": "Order cancelled."})
 
 class TransactionViewSet(viewsets.ModelViewSet):
     queryset = Transaction.objects.all().order_by('-created_at')
