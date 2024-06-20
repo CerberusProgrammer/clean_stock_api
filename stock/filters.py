@@ -54,10 +54,14 @@ class ManufacturerFilter(filters.FilterSet):
     contact_email = filters.CharFilter(lookup_expr='icontains')
     address = filters.CharFilter(lookup_expr='icontains')
     created_at = filters.DateFilter(lookup_expr='exact')
+    website = filters.CharFilter(lookup_expr='icontains')
+    country = filters.CharFilter(lookup_expr='icontains')
+    city = filters.CharFilter(lookup_expr='icontains')
+    status = filters.BooleanFilter(lookup_expr='exact')
 
     class Meta:
         model = Manufacturer
-        fields = ['name', 'description', 'contact_phone', 'contact_email', 'address', 'created_at']
+        fields = ['name', 'description', 'contact_phone', 'contact_email', 'address', 'created_at', 'website', 'country', 'city', 'status',]
 
 class OrderFilter(filters.FilterSet):
     created_at = filters.DateFilter(lookup_expr='exact')
