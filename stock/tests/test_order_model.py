@@ -4,21 +4,18 @@ from ..models import Order, Transaction, Product
 class OrderModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        # Create a sample product
         product = Product.objects.create(
             name='Test Product',
             price=10.99,
             quantity=10
         )
         
-        # Create a sample transaction
         transaction = Transaction.objects.create(
             product=product,
             quantity=5,
             price=10.99
         )
         
-        # Create a sample order
         order = Order.objects.create()
         order.transactions.add(transaction)
     
