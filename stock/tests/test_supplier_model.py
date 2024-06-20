@@ -1,9 +1,11 @@
 from django.test import TestCase
 from ..models import Supplier
+from django.contrib.auth.models import User
 
 class SupplierModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
+        cls.test_user = User.objects.create_user(username='testuser', password='testpass')
         Supplier.objects.create(
             name='Test Supplier',
             icon='test_icon',
@@ -14,7 +16,8 @@ class SupplierModelTest(TestCase):
             contact_phone='1234567890',
             country='Test Country',
             city='Test City',
-            status=True
+            status=True,
+            user=cls.test_user
         )
     
     def test_name_label(self):
