@@ -1,12 +1,15 @@
 from decimal import Decimal
 from django.test import TestCase
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 
 from ..models import Product
 
 class ProductModelTest(TestCase):
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(self):
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        
         Product.objects.create(
             name='Test Product',
             description='This is a test product',
@@ -23,7 +26,8 @@ class ProductModelTest(TestCase):
             price=9.99,
             quantity=10,
             quantity_min=5,
-            quantity_max=20
+            quantity_max=20,
+            user=self.user
         )
 
     def test_name_label(self):
