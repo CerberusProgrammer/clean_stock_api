@@ -78,7 +78,6 @@ class SupplierViewSetTest(TestCase):
         supplier_data = {'name': 'Test Supplier'}
         self.client.post('/api/suppliers/', supplier_data, HTTP_AUTHORIZATION='Token ' + self.token)
         
-        # Create a new user and get their token
         self.user2 = User.objects.create_user(username='testuser2', password='testpass2')
         response = self.client.post('/api/login/', {'username': 'testuser2', 'password': 'testpass2'})
         token2 = response.data['token']
