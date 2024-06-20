@@ -1,14 +1,18 @@
 from django.test import TestCase
 from ..models import Category
+from django.contrib.auth.models import User
 
 class CategoryModelTest(TestCase):
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(self):
+        self.user = User.objects.create_user(username='testuser', password='12345')
+
         Category.objects.create(
             name='Test Category',
             icon='test_icon',
             description='This is a test category',
-            status=True
+            status=True,
+            user=self.user
         )
     
     def test_name_label(self):
