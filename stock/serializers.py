@@ -82,9 +82,11 @@ class OrderSerializer(serializers.ModelSerializer):
     
     def validate(self, data):
         user = self.context['request'].user
-        order_number = data['order_number']
-        if Order.objects.filter(user=user, order_number=order_number).exists():
-            raise serializers.ValidationError({"order_number": "Order with this number already exists for this user."})
+        
+        transactions = data.get('transactions')
+        if not transactions:
+            raise serializers.ValidationError({"transactions": "At least one transaction is required."})
+        
         return data
 
 class TransactionSerializer(serializers.ModelSerializer):
@@ -96,7 +98,10 @@ class TransactionSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         user = self.context['request'].user
-        transaction_id = data['transaction_id']
-        if Transaction.objects.filter(user=user, transaction_id=transaction_id).exists():
-            raise serializers.ValidationError({"transaction_id": "Transaction with this ID already exists for this user."})
+        
+        product = data.get('product')
+        
+        if not product:
+            raise serializers.ValidationError({"product": "At least one transaction is required."})
+        
         return data
