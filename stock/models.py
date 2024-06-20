@@ -103,6 +103,7 @@ class Supplier(models.Model):
 
 class Order(models.Model):
     user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    status = models.BooleanField(default=True)
     transactions = models.ManyToManyField('Transaction')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -113,7 +114,26 @@ class Order(models.Model):
         ]
     
     def __str__(self):
-        return f'{self.created_at}'
+        return f'{self.created_at} - {self.status} - {len(self.transactions.all())} transactions'
+
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            super().save(*args, **kwargs)
+            for transaction in self.transactions.all():
+                transaction.product.quantity -= transaction.quantity
+                transaction.product.save()
+        else:
+            super().save(*args, **kwargs)
+    
+    def cancel(self):
+        if not self.status:
+            raise ValueError("Order has already been cancelled")
+
+        self.status = False
+        for transaction in self.transactions.all():
+            transaction.product.quantity += transaction.quantity
+            transaction.product.save()
+        self.save()
 
 class Transaction(models.Model):
     user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
@@ -130,11 +150,3 @@ class Transaction(models.Model):
     
     def __str__(self):
         return self.product.name
-    
-    def complete_transaction(self):
-        self.product.quantity -= self.quantity
-        self.product.save()
-
-    def reverse_transaction(self):
-        self.product.quantity += self.quantity
-        self.product.save()
