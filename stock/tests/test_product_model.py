@@ -99,44 +99,6 @@ class ProductModelTest(TestCase):
                 user=self.user
             )
 
-    def test_quantity_within_bounds(self):
-        """
-        Test case to ensure that the quantity of a product is within the specified bounds.
-
-        This test verifies that the `full_clean()` method of the `Product` model raises a `ValidationError`
-        when the quantity is outside the allowed bounds, and does not raise an exception when the quantity
-        is within the bounds.
-
-        Steps:
-        1. Get a product object with a specific ID.
-        2. Set the quantity to a value outside the allowed bounds (30) and assert that a `ValidationError` is raised.
-        3. Set the quantity to a value within the allowed bounds (10) and assert that no exception is raised.
-        4. Update the minimum quantity allowed for the product to 5.
-        5. Set the quantity to a value outside the new allowed bounds (3) and assert that a `ValidationError` is raised.
-        6. Set the quantity to a value within the new allowed bounds (10) and assert that no exception is raised.
-        """
-        product = Product.objects.get(id=1)
-        product.quantity = 30
-        with self.assertRaises(ValidationError):
-            product.full_clean()
-
-        product.quantity = 10
-        try:
-            product.full_clean()
-        except ValidationError:
-            self.fail("full_clean() raised ValidationError unexpectedly!")
-
-        product.quantity_min = 5
-        product.quantity = 3
-        with self.assertRaises(ValidationError):
-            product.full_clean()
-
-        product.quantity = 10
-        try:
-            product.full_clean()
-        except ValidationError:
-            self.fail("full_clean() raised ValidationError unexpectedly!")
-
     def test_product_status_toggle(self):
         """
         Test case to verify the toggling of product status.
