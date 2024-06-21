@@ -27,8 +27,19 @@ class ProductSerializer(serializers.ModelSerializer):
     def validate(self, data):
         user = self.context['request'].user
         barcode = data.get('barcode')
+        
         if Product.objects.filter(user=user, barcode=barcode).exists():
             raise serializers.ValidationError({"barcode": "Product with this barcode already exists for this user."})
+        
+        quantity = data.get('quantity')
+        quantity_min = data.get('quantity_min')
+        quantity_max = data.get('quantity_max')
+
+        if quantity_min is not None and quantity < quantity_min:
+            raise serializers.ValidationError({'quantity': 'Quantity must be greater than or equal to quantity_min.'})
+        if quantity_max is not None and quantity > quantity_max:
+            raise serializers.ValidationError({'quantity': 'Quantity must be less than or equal to quantity_max.'})
+
         return data
 
 class SupplierSerializer(serializers.ModelSerializer):
