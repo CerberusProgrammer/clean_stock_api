@@ -64,7 +64,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            return Product.objects.filter(user=self.request.user)
+            return Product.objects.filter(user=self.request.user).order_by('-id')
         return Product.objects.none()
 
     def perform_create(self, serializer):
@@ -80,7 +80,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            return Category.objects.filter(user=self.request.user)
+            return Category.objects.filter(user=self.request.user).order_by('id')
         return Category.objects.none()
 
     def perform_create(self, serializer):
@@ -96,14 +96,14 @@ class SupplierViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            return Supplier.objects.filter(user=self.request.user)
+            return Supplier.objects.filter(user=self.request.user).order_by('id')
         return Supplier.objects.none()
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
 class ManufacturerViewSet(viewsets.ModelViewSet):
-    queryset = Manufacturer.objects.all().order_by('id')
+    queryset = Manufacturer.objects.all()
     serializer_class = ManufacturerSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = ManufacturerFilter
@@ -112,14 +112,14 @@ class ManufacturerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            return Manufacturer.objects.filter(user=self.request.user)
+            return Manufacturer.objects.filter(user=self.request.user).order_by('id')
         return Manufacturer.objects.none()
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
 class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.all().order_by('-created_at')
+    queryset = Order.objects.all()
     serializer_class = OrderSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = OrderFilter
@@ -128,7 +128,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            return Order.objects.filter(user=self.request.user)
+            return Order.objects.filter(user=self.request.user).order_by('-created_at')
         return Order.objects.none()
     
     def perform_create(self, serializer):
@@ -145,7 +145,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response({"status": "Order cancelled."})
 
 class TransactionViewSet(viewsets.ModelViewSet):
-    queryset = Transaction.objects.all().order_by('-created_at')
+    queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = TransactionFilter
@@ -154,7 +154,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            return Transaction.objects.filter(user=self.request.user)
+            return Transaction.objects.filter(user=self.request.user).order_by('-created_at')
         return Transaction.objects.none()
     
     def perform_create(self, serializer):
