@@ -92,8 +92,6 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = '__all__'
     
     def validate(self, data):
-        user = self.context['request'].user
-        
         transactions = data.get('transactions')
         if not transactions:
             raise serializers.ValidationError({"transactions": "At least one transaction is required."})
@@ -108,8 +106,6 @@ class TransactionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate(self, data):
-        user = self.context['request'].user
-        
         product = data.get('product')
         
         if not product:
