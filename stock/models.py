@@ -27,12 +27,6 @@ class Product(models.Model):
             models.UniqueConstraint(fields=['user', 'barcode'], name='unique_barcode_per_user')
         ]
     
-    def clean(self):
-        if self.quantity_min is not None and self.quantity < self.quantity_min:
-            raise ValidationError('Quantity must be greater than or equal to quantity_min.')
-        if self.quantity_max is not None and self.quantity > self.quantity_max:
-            raise ValidationError('Quantity must be less than or equal to quantity_max.')
-    
     def __str__(self):
         return self.name
 
