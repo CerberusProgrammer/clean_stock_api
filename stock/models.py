@@ -1,5 +1,29 @@
+from django.utils import timezone
 from django.db import models
-from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator
+
+class Promotion(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)    
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    discount_percentage = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        validators=[
+            MinValueValidator(0.0, message="The discount percentage must be at least 0.0"),
+            MaxValueValidator(100.00, message="The discount percentage cannot exceed 100.00")
+        ]
+    )
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    products = models.ManyToManyField('Product', related_name='promotions', blank=True)
+    categories = models.ManyToManyField('Category', related_name='promotions', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.BooleanField(default=True)
+    
+    def is_active(self):
+        return self.start_date <= timezone.now() <= self.end_date
 
 class Product(models.Model):
     user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
@@ -19,6 +43,8 @@ class Product(models.Model):
     quantity = models.IntegerField(default=0)
     quantity_min = models.IntegerField(blank=True, null=True)
     quantity_max = models.IntegerField(blank=True, null=True)
+    color = models.CharField(max_length=50, blank=True, null=True)
+    category = models.ForeignKey('Category', on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -26,6 +52,19 @@ class Product(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['user', 'barcode'], name='unique_barcode_per_user')
         ]
+    
+    def get_price_with_discount(self):
+        if not hasattr(self, '_price_with_discount'):
+            self._price_with_discount = self.price
+            active_product_promotions = self.promotions.filter(start_date__lte=timezone.now(), end_date__gte=timezone.now())
+            active_category_promotions = Promotion.objects.filter(categories=self.category, start_date__lte=timezone.now(), end_date__gte=timezone.now())
+            
+            active_promotions = active_product_promotions | active_category_promotions
+            
+            for promotion in active_promotions.distinct():
+                self._price_with_discount *= (1 - (promotion.discount_percentage / 100))
+                self._price_with_discount = max(self._price_with_discount, 0)
+        return self._price_with_discount
     
     def __str__(self):
         return self.name
@@ -37,6 +76,7 @@ class Category(models.Model):
     icon = models.CharField(max_length=50, blank=True, null=True)
     description = models.TextField(max_length=255, blank=True, null=True)
     status = models.BooleanField(default=True)
+    color = models.CharField(max_length=50, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -60,6 +100,7 @@ class Manufacturer(models.Model):
     country = models.CharField(max_length=50, blank=True, null=True)
     city = models.CharField(max_length=50, blank=True, null=True)
     status = models.BooleanField(default=True)
+    color = models.CharField(max_length=50, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -83,6 +124,7 @@ class Supplier(models.Model):
     country = models.CharField(max_length=50, blank=True, null=True)
     city = models.CharField(max_length=50, blank=True, null=True)
     status = models.BooleanField(default=True)
+    color = models.CharField(max_length=50, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
