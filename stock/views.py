@@ -11,26 +11,36 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 
-from stock.models import Product, Promotion
+from stock.models import Order
+from stock.models import Product
 from stock.models import Category
 from stock.models import Supplier
-from stock.models import Manufacturer
-from stock.models import Order
+from stock.models import Promotion
 from stock.models import Transaction
+from stock.models import Manufacturer
 
-from stock.filters import ProductFilter, PromotionFilter
+from stock.filters import OrderFilter
+from stock.filters import ProductFilter
 from stock.filters import CategoryFilter
 from stock.filters import SupplierFilter
-from stock.filters import ManufacturerFilter
-from stock.filters import OrderFilter
+from stock.filters import PromotionFilter
 from stock.filters import TransactionFilter
+from stock.filters import ManufacturerFilter
 
-from stock.serializers import CategorySerializer, PromotionSerializer, UserSerializer
-from stock.serializers import ManufacturerSerializer
+from stock.serializers import UserSerializer
+from stock.serializers import OrderSerializer
 from stock.serializers import ProductSerializer
 from stock.serializers import SupplierSerializer
-from stock.serializers import OrderSerializer
+from stock.serializers import CategorySerializer
+from stock.serializers import PromotionSerializer
 from stock.serializers import TransactionSerializer
+from stock.serializers import ManufacturerSerializer
+
+from django.db.models import F 
+from django.db.models import Sum 
+from django.utils import timezone
+from django.db.models.functions import TruncDay
+
 
 class LoginView(APIView):
     def post(self, request):
@@ -154,11 +164,57 @@ class OrderViewSet(viewsets.ModelViewSet):
             transaction.product.quantity -= transaction.quantity
             transaction.product.save()
     
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], url_path='cancel')
     def cancel(self, request, pk=None):
         order = self.get_object()
         order.cancel()
         return Response({"status": "Order cancelled."})
+
+    @action(detail=False, methods=['get'], url_path='fast-report')
+    def fast_report(self, request):
+        one_week_ago = timezone.now() - timezone.timedelta(days=7)
+        orders = Order.objects.filter(user=request.user, created_at__gte=one_week_ago)
+
+        total_earned = orders.annotate(total_order=Sum(F('transactions__price') * F('transactions__quantity'))).aggregate(Sum('total_order'))['total_order__sum'] or 0
+        total_transactions = orders.aggregate(total=Sum('transactions__quantity'))['total'] or 0
+        number_of_orders = orders.count()
+        average_earnings_per_order = total_earned / number_of_orders if number_of_orders > 0 else 0
+
+        product_sales = Transaction.objects.filter(order__in=orders).values('product').annotate(total_sold=Sum('quantity')).order_by('-total_sold').first()
+        most_sold_product = Product.objects.get(id=product_sales['product']) if product_sales else None
+
+        transactions_by_day = {}
+        daily_transactions = Transaction.objects.filter(order__in=orders).annotate(day=TruncDay('created_at')).order_by('day')
+        for transaction in daily_transactions:
+            day_name = transaction.created_at.strftime('%A').lower()
+            if day_name not in transactions_by_day:
+                transactions_by_day[day_name] = []
+            transactions_by_day[day_name].append(TransactionSerializer(transaction).data)
+
+        weekly_sales = []
+        for order in orders:
+            transactions = order.transactions.all().values('product__name', 'quantity', 'price')
+            weekly_sales.append({
+                'order_id': order.id,
+                'created_at': order.created_at,
+                'transactions': list(transactions),
+            })
+
+        different_days = 7
+        daily_average = total_transactions / different_days if different_days > 0 else 0
+
+        report = {
+            'total_earned': total_earned,
+            'total_transactions': total_transactions,
+            'number_of_orders': number_of_orders,
+            'average_earnings_per_order': average_earnings_per_order,
+            'most_sold_product': ProductSerializer(most_sold_product).data if most_sold_product else None,
+            'daily_transactions_average': daily_average,
+            'sales_last_week': weekly_sales,
+            'transactions_by_day': transactions_by_day,
+        }
+
+        return Response(report)
 
 class TransactionViewSet(viewsets.ModelViewSet):
     queryset = Transaction.objects.all()
