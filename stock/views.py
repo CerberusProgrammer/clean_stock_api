@@ -11,21 +11,21 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 
-from stock.models import Product
+from stock.models import Product, Promotion
 from stock.models import Category
 from stock.models import Supplier
 from stock.models import Manufacturer
 from stock.models import Order
 from stock.models import Transaction
 
-from stock.filters import ProductFilter
+from stock.filters import ProductFilter, PromotionFilter
 from stock.filters import CategoryFilter
 from stock.filters import SupplierFilter
 from stock.filters import ManufacturerFilter
 from stock.filters import OrderFilter
 from stock.filters import TransactionFilter
 
-from stock.serializers import CategorySerializer, UserSerializer
+from stock.serializers import CategorySerializer, PromotionSerializer, UserSerializer
 from stock.serializers import ManufacturerSerializer
 from stock.serializers import ProductSerializer
 from stock.serializers import SupplierSerializer
@@ -53,6 +53,22 @@ class UserViewSet(viewsets.ModelViewSet):
         else:
             self.permission_classes = [IsAuthenticated]
         return super(self.__class__, self).get_permissions()
+
+class PromotionViewSet(viewsets.ModelViewSet):
+    queryset = Promotion.objects.all()
+    serializer_class = PromotionSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = PromotionFilter
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            return Promotion.objects.filter(user=self.request.user).order_by('-id')
+        return Promotion.objects.none()
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()

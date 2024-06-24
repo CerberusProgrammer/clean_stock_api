@@ -8,6 +8,7 @@ from stock.views import OrderViewSet
 from stock.views import ProductViewSet
 from stock.views import CategoryViewSet
 from stock.views import SupplierViewSet
+from stock.views import PromotionViewSet
 from stock.views import TransactionViewSet
 from stock.views import ManufacturerViewSet
 
@@ -19,6 +20,7 @@ router.register('orders', OrderViewSet)
 router.register('products', ProductViewSet)
 router.register('suppliers', SupplierViewSet)
 router.register('categories', CategoryViewSet)
+router.register('promotions', PromotionViewSet)
 router.register('transactions', TransactionViewSet)
 router.register('manufacturers', ManufacturerViewSet)
 
