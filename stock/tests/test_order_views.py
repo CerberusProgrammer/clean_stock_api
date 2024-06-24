@@ -3,6 +3,9 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 from stock.models import Order, Product, Transaction
+from rest_framework.authtoken.models import Token
+from django.utils import timezone
+
 
 class OrderViewSetTest(TestCase):
     def setUp(self):
@@ -185,3 +188,30 @@ class OrderViewSetTest(TestCase):
 
         product.refresh_from_db()
         self.assertEqual(product.quantity, initial_quantity)
+    
+    def test_fast_report(self):
+        user = User.objects.create_user(username='x', password='12345')
+        token, _ = Token.objects.get_or_create(user=user)
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+
+        product = Product.objects.create(name='Test Product', price=100, quantity=50, user=user)
+        transaction = Transaction.objects.create(user=user, product=product, quantity=2, price=product.price)
+        order = Order.objects.create(user=user, created_at=timezone.now() - timezone.timedelta(days=3))
+        order.transactions.set([transaction])
+
+        response = client.get('/api/orders/fast-report/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        report = response.data
+        self.assertEqual(report['total_earned'], 200)
+        self.assertEqual(report['total_transactions'], 2)
+        self.assertEqual(report['daily_transactions_average'], 2 / 7.0)
+        self.assertEqual(len(report['sales_last_week']), 1)
+        sale = report['sales_last_week'][0]
+        self.assertEqual(sale['order_id'], order.id)
+        self.assertEqual(len(sale['transactions']), 1)
+        transaction = sale['transactions'][0]
+        self.assertEqual(transaction['product__name'], 'Test Product')
+        self.assertEqual(transaction['quantity'], 2)
+        self.assertEqual(transaction['price'], 100)
