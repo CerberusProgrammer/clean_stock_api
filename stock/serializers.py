@@ -1,12 +1,32 @@
 from rest_framework import serializers
 
 from django.contrib.auth.models import User
-from .models import Product
+from .models import Product, Promotion
 from .models import Supplier
 from .models import Category
 from .models import Manufacturer
 from .models import Order
 from .models import Transaction
+
+class PromotionSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.id')
+
+    class Meta:
+        model = Promotion
+        fields = '__all__'
+
+    def validate(self, data):
+        user = self.context['request'].user
+        name = data.get('name')
+        if Promotion.objects.filter(user=user, name=name).exists():
+            raise serializers.ValidationError({"name": "Promotion with this name already exists for this user."})
+        
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        if start_date and end_date and start_date > end_date:
+            raise serializers.ValidationError({"end_date": "End date must be greater than start date."})
+        
+        return data
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
