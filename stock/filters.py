@@ -1,11 +1,22 @@
 from django_filters import rest_framework as filters
 
-from stock.models import Product
+from stock.models import Product, Promotion
 from stock.models import Category
 from stock.models import Supplier
 from stock.models import Manufacturer
 from stock.models import Order
 from stock.models import Transaction
+
+class PromotionFilter(filters.FilterSet):
+    name = filters.CharFilter(lookup_expr='icontains')
+    description = filters.CharFilter(lookup_expr='icontains')
+    start_date = filters.DateFilter(lookup_expr='exact')
+    end_date = filters.DateFilter(lookup_expr='exact')
+    created_at = filters.DateFilter(lookup_expr='exact')
+
+    class Meta:
+        model = Promotion
+        fields = ['name', 'description', 'start_date', 'end_date', 'created_at']
 
 class ProductFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr='icontains')
@@ -20,11 +31,12 @@ class ProductFilter(filters.FilterSet):
     status = filters.BooleanFilter(lookup_expr='exact')
     price = filters.NumberFilter(lookup_expr='exact')
     quantity = filters.NumberFilter(lookup_expr='exact')
+    category = filters.CharFilter(lookup_expr='icontains')
     created_at = filters.DateFilter(lookup_expr='exact')
 
     class Meta:
         model = Product
-        fields = ['name', 'description', 'barcode', 'weight', 'dimension', 'expiration_date', 'location', 'manufacturer', 'supplier','status', 'price', 'quantity', 'created_at']
+        fields = ['name', 'description', 'barcode', 'weight', 'category', 'dimension', 'expiration_date', 'location', 'manufacturer', 'supplier','status', 'price', 'quantity', 'created_at']
 
 class CategoryFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr='icontains')
