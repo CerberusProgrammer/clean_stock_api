@@ -5,3 +5,4 @@ media
 venv
 .env
 errors.log
+static
