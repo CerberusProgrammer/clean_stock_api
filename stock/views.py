@@ -49,13 +49,21 @@ class LoginView(APIView):
         user = authenticate(username=username, password=password)
         if user is not None:
             token, created = Token.objects.get_or_create(user=user)
-            return Response({"token": token.key})
+            return Response({
+                "token": token.key,
+                "username": user.username,
+                "email": user.email,
+                })
         else:
             return Response({"error": "Wrong Credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    
+    def get_queryset(self):
+        user = self.request.user
+        return User.objects.filter(id=user.id)
     
     def get_permissions(self):
         if self.action == 'create':
