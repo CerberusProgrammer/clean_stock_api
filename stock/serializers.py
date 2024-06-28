@@ -39,7 +39,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.id')
-    price = serializers.FloatField()
+    price_sale = serializers.FloatField()
+    price_purchased = serializers.FloatField()
     weight = serializers.FloatField()
 
     class Meta:
